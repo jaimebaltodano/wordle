@@ -30,7 +30,6 @@ export const KEYS = [
   "«",
 ];
 
-export const WORDLE = "PALET";
 export const MAXROW = 6;
 export const MAXCOL = 5;
 export const EMPTYARRAY = new Array(MAXROW);

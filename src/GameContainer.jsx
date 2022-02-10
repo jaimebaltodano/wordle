@@ -2,8 +2,10 @@ import { TileContainer } from "./TileContainer";
 import appclass from "./App.module.css";
 import KeyBoard from "./KeyBoard";
 import { Message } from "./Message";
-import { useEffect, useState } from "react";
-import { MAXROW, MAXCOL, EMPTYARRAY, CLASSARRAY, WORDLE } from "./Constants";
+import { useState } from "react";
+import { MAXROW, MAXCOL, EMPTYARRAY, CLASSARRAY } from "./Constants";
+import Service from "./services";
+import { useEffect } from "react/cjs/react.development";
 
 export const GameContainer = () => {
   const [currX, setCurrX] = useState(0);
@@ -11,10 +13,25 @@ export const GameContainer = () => {
   const [guess, setGuess] = useState(EMPTYARRAY);
   const [yxClass, setYXClass] = useState(CLASSARRAY);
   const [message, setMessage] = useState("");
+  const [newWordle, setNewWordle] = useState(null);
+  const [isBusy, setIsBusy] = useState(true);
+
+  async function getWordle () {
+    const w = await Service.wordle.list();
+    setNewWordle(w[0].toUpperCase());
+  }
+  useEffect(() => {
+    getWordle();
+  }, []);
+
+  useEffect(() => {
+    console.log(newWordle)
+    setIsBusy(false)
+  },[newWordle]);
 
   const handleKeyClick = (element) => {
     if (element === "«") {
-      handleDelete()
+      handleDelete();
     } else if (element === "ENTER") {
       handleEnter();
     } else {
@@ -31,7 +48,7 @@ export const GameContainer = () => {
     }
     setGuess(newGuess);
     setCurrX(() => newX);
-  }
+  };
 
   const handleDelete = () => {
     let newX = currX;
@@ -42,13 +59,13 @@ export const GameContainer = () => {
     }
     setGuess(newGuess);
     setCurrX(() => newX);
-  }
+  };
 
   const handleEnter = () => {
     if (currX >= MAXCOL) {
       const guessWord = guess[currY].join("");
       flipColor();
-      if (guessWord === WORDLE) {
+      if (guessWord === newWordle) {
         setMessage("Maginifique");
       } else {
         if (currY >= MAXROW) {
@@ -65,26 +82,25 @@ export const GameContainer = () => {
 
   const flipColor = () => {
     const newClass = [...yxClass];
-    guess[currY].forEach((letter,i) => {
-      if (letter === WORDLE[i]){
-        newClass[currY][i] = "green-overlay"
-      }else if (WORDLE.includes(letter)){
-        newClass[currY][i] = "yellow-overlay"
-      }else{
-        newClass[currY][i] = "grey-overlay"
+    guess[currY].forEach((letter, i) => {
+      if (letter === newWordle[i]) {
+        newClass[currY][i] = "green-overlay";
+      } else if (newWordle.includes(letter)) {
+        newClass[currY][i] = "yellow-overlay";
+      } else {
+        newClass[currY][i] = "grey-overlay";
       }
     });
-    setYXClass(newClass)
-  }
+    setYXClass(newClass);
+  };
 
-  return (
-    <div className={appclass["game-container"]}>
-      <div className={appclass["title-container"]}>
-        <h1>Hello wordle</h1>
-      </div>
-      <Message value={message} />
-      <TileContainer guess={guess} tileClass={yxClass}/>
-      <KeyBoard onClick={handleKeyClick} />
-    </div>
-  );
+  return (!isBusy &&<div className={appclass["game-container"]}>
+          <div className={appclass["title-container"]}>
+            <h1>Hello wordle</h1>
+          </div>
+          <Message value={message} />
+          <TileContainer guess={guess} tileClass={yxClass} />
+          <KeyBoard onClick={handleKeyClick} />
+        </div>
+  )
 };
